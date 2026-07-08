@@ -1,0 +1,781 @@
+```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>우리 동네 공론장 - Local Voice</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght=300;400;500;700;900&display=swap');
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-2 cursor-pointer" onclick="goToHome()">
+                <div class="bg-blue-600 text-white p-2 rounded-lg flex items-center justify-center">
+                    <i class="fa-solid fa-users-rectangle text-xl"></i>
+                </div>
+                <span class="text-xl font-bold tracking-tight text-slate-900">우리 동네 <span class="text-blue-600">공론장</span></span>
+            </div>
+            <button onclick="openCreateModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium flex items-center space-x-2 transition shadow-sm">
+                <i class="fa-solid fa-plus"></i>
+                <span>의견 제안하기</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-8">
+        
+        <!-- Hero Section -->
+        <div id="hero-section" class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-6 md:p-10 text-white mb-8 shadow-md">
+            <h1 class="text-2xl md:text-3xl font-bold mb-2">지방 자치의 시작, 우리 손으로 만드는 동네</h1>
+            <p class="text-blue-100 mb-6 text-sm md:text-base max-w-xl">우리 동네의 골칫거리나 개선이 필요한 사항을 제안하고, 이웃들과 공유하여 찬반 투표와 댓글로 더 나은 해결책을 모색해 보세요.</p>
+            <div class="flex flex-wrap gap-3">
+                <span class="bg-white/20 px-3 py-1.5 rounded-full text-xs font-medium"><i class="fa-solid fa-share-nodes mr-1"></i> 공유 가능한 링크 제공</span>
+                <span class="bg-white/20 px-3 py-1.5 rounded-full text-xs font-medium"><i class="fa-solid fa-sync mr-1"></i> 실시간 토론 동기화</span>
+                <span class="bg-white/20 px-3 py-1.5 rounded-full text-xs font-medium"><i class="fa-solid fa-location-dot mr-1"></i> 우리 지역 맞춤형</span>
+            </div>
+        </div>
+
+        <!-- Issue List Page Section -->
+        <section id="list-section" class="space-y-6">
+            <!-- Filter & Search Bar -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <!-- Categories -->
+                <div class="flex flex-wrap gap-2" id="category-filters">
+                    <button onclick="filterCategory('all')" id="btn-cat-all" class="px-4 py-2 rounded-xl text-sm font-medium bg-blue-50 text-blue-600 border border-blue-100 transition">전체보기</button>
+                    <button onclick="filterCategory('교통/주차')" id="btn-cat-교통/주차" class="px-4 py-2 rounded-xl text-sm font-medium bg-slate-100 text-slate-600 border border-transparent hover:bg-slate-200 transition">교통/주차</button>
+                    <button onclick="filterCategory('환경/위생')" id="btn-cat-환경/위생" class="px-4 py-2 rounded-xl text-sm font-medium bg-slate-100 text-slate-600 border border-transparent hover:bg-slate-200 transition">환경/위생</button>
+                    <button onclick="filterCategory('안전/방범')" id="btn-cat-안전/방범" class="px-4 py-2 rounded-xl text-sm font-medium bg-slate-100 text-slate-600 border border-transparent hover:bg-slate-200 transition">안전/방범</button>
+                    <button onclick="filterCategory('문화/체육')" id="btn-cat-문화/체육" class="px-4 py-2 rounded-xl text-sm font-medium bg-slate-100 text-slate-600 border border-transparent hover:bg-slate-200 transition">문화/체육</button>
+                    <button onclick="filterCategory('기타')" id="btn-cat-기타" class="px-4 py-2 rounded-xl text-sm font-medium bg-slate-100 text-slate-600 border border-transparent hover:bg-slate-200 transition">기타</button>
+                </div>
+                <!-- Search Input -->
+                <div class="relative w-full md:w-64">
+                    <input type="text" id="search-input" oninput="handleSearch()" placeholder="검색어를 입력하세요..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <span class="absolute left-3 top-2.5 text-slate-400"><i class="fa-solid fa-magnifying-glass text-sm"></i></span>
+                </div>
+            </div>
+
+            <!-- Issues Grid -->
+            <div id="issues-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Loading State placeholder -->
+                <div class="col-span-full text-center py-12">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+                    <p class="text-slate-500 text-sm">우리 동네 이야기들을 실시간으로 불러오고 있습니다...</p>
+                </div>
+            </div>
+            
+            <!-- Empty State -->
+            <div id="empty-state" class="hidden text-center py-16 bg-white rounded-2xl border border-slate-200">
+                <div class="text-slate-300 text-5xl mb-4"><i class="fa-regular fa-folder-open"></i></div>
+                <h3 class="text-lg font-medium text-slate-700 mb-1">등록된 공론이 없습니다</h3>
+                <p class="text-slate-500 text-sm mb-4">첫 번째로 우리 동네의 소중한 의견을 제안해 보세요!</p>
+                <button onclick="openCreateModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition">지금 제안하기</button>
+            </div>
+        </section>
+
+        <!-- Issue Detail Page Section (Hidden by default) -->
+        <section id="detail-section" class="hidden space-y-6">
+            <!-- Navigation Back & Share -->
+            <div class="flex items-center justify-between">
+                <button onclick="goToHome()" class="inline-flex items-center space-x-2 text-slate-600 hover:text-slate-900 font-medium transition">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>목록으로 돌아가기</span>
+                </button>
+
+                <!-- Share Button -->
+                <button onclick="copyShareLink()" class="inline-flex items-center space-x-2 bg-blue-50 hover:bg-blue-100 text-blue-600 px-4 py-2 rounded-xl font-semibold text-sm transition shadow-sm">
+                    <i class="fa-solid fa-share-nodes"></i>
+                    <span>이웃에게 링크 공유하기</span>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left: Issue Details & Voting -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <span id="detail-category" class="bg-blue-50 text-blue-600 text-xs px-3 py-1.5 rounded-full font-bold">카테고리</span>
+                            <span id="detail-date" class="text-xs text-slate-400"><i class="fa-regular fa-clock mr-1"></i>작성일</span>
+                        </div>
+                        
+                        <h2 id="detail-title" class="text-2xl md:text-3xl font-bold text-slate-900 leading-snug">이슈 상세 제목</h2>
+                        
+                        <p id="detail-description" class="text-slate-600 leading-relaxed whitespace-pre-wrap text-base">이슈 상세 설명 내용이 여기에 들어갑니다.</p>
+
+                        <div class="border-t border-slate-100 pt-6">
+                            <h3 class="text-lg font-bold text-slate-800 mb-4 text-center"><i class="fa-solid fa-square-poll-horizontal text-blue-600 mr-2"></i>이 제안에 찬성하시나요, 반대하시나요?</h3>
+                            
+                            <!-- Voting System Cards -->
+                            <div class="grid grid-cols-2 gap-4 mb-6">
+                                <button id="btn-vote-agree" onclick="castVote(true)" class="group border-2 border-slate-200 hover:border-emerald-500 rounded-2xl p-4 flex flex-col items-center justify-center transition bg-white hover:bg-emerald-50">
+                                    <div class="w-12 h-12 rounded-full bg-emerald-50 group-hover:bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl mb-2 transition">
+                                        <i class="fa-solid fa-thumbs-up"></i>
+                                    </div>
+                                    <span class="font-bold text-slate-700 group-hover:text-emerald-700">찬성</span>
+                                    <span id="detail-agree-count" class="text-xs text-slate-500 group-hover:text-emerald-600 mt-1">0표</span>
+                                </button>
+                                
+                                <button id="btn-vote-disagree" onclick="castVote(false)" class="group border-2 border-slate-200 hover:border-rose-500 rounded-2xl p-4 flex flex-col items-center justify-center transition bg-white hover:bg-rose-50">
+                                    <div class="w-12 h-12 rounded-full bg-rose-50 group-hover:bg-rose-100 text-rose-600 flex items-center justify-center text-xl mb-2 transition">
+                                        <i class="fa-solid fa-thumbs-down"></i>
+                                    </div>
+                                    <span class="font-bold text-slate-700 group-hover:text-rose-700">반대</span>
+                                    <span id="detail-disagree-count" class="text-xs text-slate-500 group-hover:text-rose-600 mt-1">0표</span>
+                                </button>
+                            </div>
+
+                            <!-- Live Progress Bar -->
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-xs font-bold">
+                                    <span class="text-emerald-600">찬성 <span id="percent-agree">50%</span></span>
+                                    <span class="text-rose-600">반대 <span id="percent-disagree">50%</span></span>
+                                </div>
+                                <div class="w-full bg-slate-200 h-4 rounded-full overflow-hidden flex">
+                                    <div id="bar-agree" class="bg-emerald-500 h-full transition-all duration-500" style="width: 50%;"></div>
+                                    <div id="bar-disagree" class="bg-rose-500 h-full transition-all duration-500" style="width: 50%;"></div>
+                                </div>
+                                <div class="text-center text-xs text-slate-400 mt-1">총 투표 참여 수: <span id="detail-total-votes" class="font-bold text-slate-600">0</span>표</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Discussion & Comments -->
+                <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[550px]">
+                        <h3 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-4 mb-4 flex items-center justify-between">
+                            <span><i class="fa-regular fa-comment-dots text-blue-600 mr-2"></i>주민 한마디 토론</span>
+                            <span id="comment-count-badge" class="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-full font-semibold">0</span>
+                        </h3>
+
+                        <!-- Comments Stream -->
+                        <div id="comments-container" class="flex-grow overflow-y-auto space-y-4 pr-1 mb-4">
+                            <!-- Dynamic Comments Loaded via JS -->
+                        </div>
+
+                        <!-- Write Comment Form -->
+                        <div class="border-t border-slate-100 pt-4 mt-auto">
+                            <form onsubmit="handleCommentSubmit(event)" class="space-y-3">
+                                <div class="flex gap-2">
+                                    <input type="text" id="comment-author" placeholder="닉네임" required class="w-1/3 px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <div class="flex items-center space-x-4 ml-auto text-xs font-semibold text-slate-500">
+                                        <label class="flex items-center space-x-1 cursor-pointer">
+                                            <input type="radio" name="comment-stance" value="neutral" checked class="text-blue-600 focus:ring-blue-500">
+                                            <span>일반</span>
+                                        </label>
+                                        <label class="flex items-center space-x-1 cursor-pointer text-emerald-600">
+                                            <input type="radio" name="comment-stance" value="agree" class="text-emerald-500 focus:ring-emerald-500">
+                                            <span>찬성</span>
+                                        </label>
+                                        <label class="flex items-center space-x-1 cursor-pointer text-rose-600">
+                                            <input type="radio" name="comment-stance" value="disagree" class="text-rose-500 focus:ring-rose-500">
+                                            <span>반대</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <textarea id="comment-content" rows="2" placeholder="이웃에게 힘이 되는 따뜻한 의견을 남겨주세요." required class="w-full px-3 py-2 pr-12 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+                                    <button type="submit" class="absolute right-2 bottom-3.5 bg-blue-600 hover:bg-blue-700 text-white w-8 h-8 rounded-lg flex items-center justify-center transition">
+                                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Create Issue Modal -->
+    <div id="create-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-lg shadow-xl overflow-hidden">
+            <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                <h3 class="font-bold text-slate-900 text-lg"><i class="fa-solid fa-bullhorn text-blue-600 mr-2"></i>새로운 의견 제안하기</h3>
+                <button onclick="closeCreateModal()" class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="handleCreateIssue(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">카테고리</label>
+                    <select id="form-category" required class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        <option value="교통/주차">교통/주차</option>
+                        <option value="환경/위생">환경/위생</option>
+                        <option value="안전/방범">안전/방범</option>
+                        <option value="문화/체육">문화/체육</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">제안 제목</label>
+                    <input type="text" id="form-title" placeholder="우리 동네의 해결하고 싶은 문제를 명확히 입력해 주세요." required class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">상세 설명</label>
+                    <textarea id="form-description" rows="5" placeholder="문제 상황이나 개선안을 구체적으로 설명해 주시면 다른 주민들이 쉽게 동의하고 의견을 모을 수 있습니다." required class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeCreateModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-xl text-sm font-medium transition">취소</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition">등록하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Feedback Message Box -->
+    <div id="toast-message" class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-lg flex items-center space-x-3 transition-all duration-300 z-50 pointer-events-none">
+        <span id="toast-icon" class="text-blue-400 text-lg"></span>
+        <span id="toast-text" class="text-sm font-medium"></span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-12 text-center text-xs text-slate-400">
+        <div class="max-w-6xl mx-auto px-4">
+            <p>© 2026 우리 동네 공론장 (Local Voice). 주민 여러분의 소중한 참여로 변화가 시작됩니다.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase SDK Imports & Application Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, collection, onSnapshot, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // -------------------------------------------------------------
+        // [필수 설정] 여기에 본인의 Firebase 프로젝트 설정 값을 붙여넣어 주세요!
+        // -------------------------------------------------------------
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // State Store
+        let issues = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
+        let activeIssueId = null;
+        let currentUser = null;
+        let unsubscribeList = null;
+
+        // Firebase Anonymous Authentication
+        const initAuthentication = async () => {
+            try {
+                await signInAnonymously(auth);
+            } catch (error) {
+                console.error("Firebase Auth Error:", error);
+                showToast("인증 서버에 연결할 수 없습니다. 콘솔을 확인해 주세요.", "error");
+            }
+        };
+
+        // Auth State Observer
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                setupRealtimeIssues();
+                handleURLQuery();
+            }
+        });
+
+        // Trigger Auth
+        initAuthentication();
+
+        // Setup real-time listener for "issues" collection
+        function setupRealtimeIssues() {
+            if (!currentUser) return;
+            
+            if (unsubscribeList) unsubscribeList();
+
+            const issuesCollection = collection(db, 'issues');
+            
+            unsubscribeList = onSnapshot(issuesCollection, (snapshot) => {
+                const loadedIssues = [];
+                snapshot.forEach((doc) => {
+                    loadedIssues.push({ id: doc.id, ...doc.data() });
+                });
+
+                // If empty DB, populate dummy database entries for initial engagement
+                if (loadedIssues.length === 0) {
+                    populateDefaultMockupData();
+                    return;
+                }
+
+                issues = loadedIssues;
+                renderIssues();
+
+                // If actively viewing detail, hot-reload the UI components
+                if (activeIssueId) {
+                    const activeIssue = issues.find(i => i.id === activeIssueId);
+                    if (activeIssue) {
+                        renderVoteSection(activeIssue);
+                        renderComments(activeIssue);
+                    }
+                }
+            }, (error) => {
+                console.error("Firestore sync error:", error);
+                showToast("데이터를 실시간으로 가져오는 중 에러가 발생했습니다.", "error");
+            });
+        }
+
+        // Dummy loader to ensure a fresh app doesn't look empty
+        async function populateDefaultMockupData() {
+            const defaultIssues = [
+                {
+                    category: "교통/주차",
+                    title: "은하아파트 앞 어린이 보호구역 야간 불법주차 단속 강화 요청",
+                    description: "야간 시간대만 되면 초등학교 통학로 및 아파트 정문 도로변에 대형 트럭과 학원 차량들이 불법 주차를 하여 아이들의 보행 안전이 심각하게 위협받고 있습니다. 보행 사각지대가 형성되어 주간뿐 아니라 저녁 시간대 보행 안전을 위한 수시 단속 및 무인 단속 카메라 설치가 필요합니다.",
+                    agreeCount: 42,
+                    disagreeCount: 5,
+                    comments: [
+                        { id: "c-1", author: "안전지킴이", text: "아이들 통학로인데 주차가 상습적으로 이루어지고 있어요. 강력히 찬성합니다!", stance: "agree", date: "2026-07-08" },
+                        { id: "c-2", author: "주차장확보필수", text: "주차장이 부족해서 그렇습니다. 단속만 할 게 아니라 인근 공용 주차장을 먼저 늘려야 합니다.", stance: "disagree", date: "2026-07-08" }
+                    ],
+                    date: "2026-07-05"
+                },
+                {
+                    category: "환경/위생",
+                    title: "푸른달공원 분리수거함 및 쓰레기통 재설치 건의",
+                    description: "지난해 쓰레기통 주변 무단 투기 이유로 공원 내부 쓰레기통이 전부 철거되었습니다. 하지만 쓰레기통이 없어지자 오히려 벤치나 공원 잔디밭 구석구석에 쓰레기가 방치되는 부작용이 일어나고 있습니다. 깨끗한 관리를 돕는 전용 분리수거함 설치를 건의합니다.",
+                    agreeCount: 28,
+                    disagreeCount: 8,
+                    comments: [],
+                    date: "2026-07-06"
+                }
+            ];
+
+            const issuesCollection = collection(db, 'issues');
+            for (const item of defaultIssues) {
+                await addDoc(issuesCollection, item);
+            }
+        }
+
+        // URL Deep Linking handler
+        function handleURLQuery() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sharedIssueId = urlParams.get('id');
+            if (sharedIssueId) {
+                const checkInterval = setInterval(() => {
+                    if (issues.length > 0) {
+                        clearInterval(checkInterval);
+                        const exists = issues.some(i => i.id === sharedIssueId);
+                        if (exists) {
+                            openIssueDetail(sharedIssueId);
+                        } else {
+                            showToast("찾으시는 의견 공유 링크가 존재하지 않습니다.", "warning");
+                            history.replaceState({}, document.title, window.location.pathname);
+                        }
+                    }
+                }, 100);
+            }
+        }
+
+        // Navigation Cleanups
+        window.goToHome = function() {
+            history.replaceState({}, document.title, window.location.pathname);
+            showSection('list');
+        };
+
+        // Render Issue List
+        function renderIssues() {
+            const grid = document.getElementById('issues-grid');
+            const emptyState = document.getElementById('empty-state');
+            grid.innerHTML = '';
+
+            const filtered = issues.filter(issue => {
+                const matchesCategory = currentFilter === 'all' || issue.category === currentFilter;
+                const matchesSearch = issue.title.toLowerCase().includes(searchQuery) || 
+                                      issue.description.toLowerCase().includes(searchQuery);
+                return matchesCategory && matchesSearch;
+            });
+
+            // Order by date (Descending)
+            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (filtered.length === 0) {
+                grid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            grid.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            filtered.forEach(issue => {
+                const totalVotes = issue.agreeCount + issue.disagreeCount;
+                const agreeRate = totalVotes > 0 ? Math.round((issue.agreeCount / totalVotes) * 100) : 50;
+                
+                const card = document.createElement('div');
+                card.className = "bg-white p-6 rounded-2xl border border-slate-200 hover:border-blue-300 transition duration-300 shadow-sm hover:shadow-md cursor-pointer flex flex-col justify-between";
+                card.onclick = () => openIssueDetail(issue.id);
+
+                card.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-lg font-semibold">${issue.category}</span>
+                            <span class="text-xs text-slate-400">${issue.date}</span>
+                        </div>
+                        <h3 class="font-bold text-slate-900 text-lg hover:text-blue-600 transition line-clamp-1">${issue.title}</h3>
+                        <p class="text-slate-500 text-sm line-clamp-3 leading-relaxed">${issue.description}</p>
+                    </div>
+
+                    <div class="border-t border-slate-100 pt-4 mt-6">
+                        <div class="flex items-center justify-between text-xs text-slate-500 mb-2">
+                            <span><i class="fa-solid fa-users mr-1"></i> 투표자: <strong>${totalVotes}</strong>명</span>
+                            <span>찬성 비율: <strong class="text-emerald-600">${agreeRate}%</strong></span>
+                        </div>
+                        
+                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden flex mb-4">
+                            <div class="bg-emerald-500 h-full" style="width: ${agreeRate}%"></div>
+                            <div class="bg-rose-500 h-full" style="width: ${100 - agreeRate}%"></div>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs text-slate-400 font-semibold">
+                            <span class="flex items-center space-x-1"><i class="fa-regular fa-comment-dots text-blue-500 text-sm"></i> <span>댓글 ${(issue.comments || []).length}</span></span>
+                            <span class="text-blue-600 flex items-center space-x-1"><span>토론 참여하기</span> <i class="fa-solid fa-chevron-right text-[10px]"></i></span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Open Issue Detail
+        window.openIssueDetail = function(id) {
+            const issue = issues.find(i => i.id === id);
+            if (!issue) return;
+
+            activeIssueId = id;
+            
+            const newUrl = `${window.location.pathname}?id=${id}`;
+            history.replaceState({ id: id }, document.title, newUrl);
+
+            showSection('detail');
+
+            document.getElementById('detail-category').textContent = issue.category;
+            document.getElementById('detail-date').innerHTML = `<i class="fa-regular fa-clock mr-1"></i> 작성일: ${issue.date}`;
+            document.getElementById('detail-title').textContent = issue.title;
+            document.getElementById('detail-description').textContent = issue.description;
+
+            renderVoteSection(issue);
+            renderComments(issue);
+        };
+
+        // Render Vote progress bar
+        function renderVoteSection(issue) {
+            const total = (issue.agreeCount || 0) + (issue.disagreeCount || 0);
+            const agreeRate = total > 0 ? Math.round(((issue.agreeCount || 0) / total) * 100) : 50;
+            const disagreeRate = total > 0 ? 100 - agreeRate : 50;
+
+            document.getElementById('detail-agree-count').textContent = `${issue.agreeCount || 0}표`;
+            document.getElementById('detail-disagree-count').textContent = `${issue.disagreeCount || 0}표`;
+            document.getElementById('detail-total-votes').textContent = total;
+
+            document.getElementById('percent-agree').textContent = `${agreeRate}%`;
+            document.getElementById('percent-disagree').textContent = `${disagreeRate}%`;
+
+            document.getElementById('bar-agree').style.width = `${agreeRate}%`;
+            document.getElementById('bar-disagree').style.width = `${disagreeRate}%`;
+        }
+
+        // Cast Vote to DB
+        window.castVote = async function(isAgree) {
+            if (!currentUser) return;
+
+            const issue = issues.find(i => i.id === activeIssueId);
+            if (!issue) return;
+
+            const votedKey = `voted_${activeIssueId}`;
+            if (sessionStorage.getItem(votedKey)) {
+                showToast("이미 이 제안에 소중한 권리를 행사하셨습니다.", "warning");
+                return;
+            }
+
+            const issueDocRef = doc(db, 'issues', activeIssueId);
+            
+            try {
+                if (isAgree) {
+                    await updateDoc(issueDocRef, {
+                        agreeCount: (issue.agreeCount || 0) + 1
+                    });
+                } else {
+                    await updateDoc(issueDocRef, {
+                        disagreeCount: (issue.disagreeCount || 0) + 1
+                    });
+                }
+                sessionStorage.setItem(votedKey, 'true');
+                showToast("투표가 실시간 반영되었습니다!", "success");
+            } catch (error) {
+                console.error("Voting Update Error:", error);
+                showToast("투표 저장 중 네트워크 오류가 발생했습니다.", "error");
+            }
+        };
+
+        // Render Comments list
+        function renderComments(issue) {
+            const commentsContainer = document.getElementById('comments-container');
+            const countBadge = document.getElementById('comment-count-badge');
+            
+            const comments = issue.comments || [];
+            commentsContainer.innerHTML = '';
+            countBadge.textContent = comments.length;
+
+            if (comments.length === 0) {
+                commentsContainer.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-slate-300 py-12">
+                        <i class="fa-regular fa-comments text-4xl mb-2"></i>
+                        <span class="text-sm">등록된 주민의 한마디가 없습니다.</span>
+                        <span class="text-xs">첫 토론의 의견을 제안해 주세요!</span>
+                    </div>
+                `;
+                return;
+            }
+
+            comments.forEach(comment => {
+                let badgeHTML = '';
+                if (comment.stance === 'agree') {
+                    badgeHTML = `<span class="bg-emerald-50 text-emerald-600 text-[10px] px-2 py-0.5 rounded-full font-bold">찬성</span>`;
+                } else if (comment.stance === 'disagree') {
+                    badgeHTML = `<span class="bg-rose-50 text-rose-600 text-[10px] px-2 py-0.5 rounded-full font-bold">반대</span>`;
+                }
+
+                const card = document.createElement('div');
+                card.className = "bg-slate-50 border border-slate-200/60 p-4 rounded-xl space-y-2 relative transition hover:bg-slate-100/60";
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span class="font-bold text-slate-700 text-sm">${comment.author}</span>
+                            ${badgeHTML}
+                        </div>
+                        <span class="text-[10px] text-slate-400">${comment.date}</span>
+                    </div>
+                    <p class="text-slate-600 text-sm leading-relaxed">${comment.text}</p>
+                    <button onclick="deleteComment('${comment.id}')" class="absolute top-2 right-3 text-slate-300 hover:text-rose-500 transition-colors text-xs p-1" title="삭제">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                `;
+                commentsContainer.appendChild(card);
+            });
+
+            commentsContainer.scrollTop = commentsContainer.scrollHeight;
+        }
+
+        // Post Comment
+        window.handleCommentSubmit = async function(event) {
+            event.preventDefault();
+            if (!currentUser) return;
+
+            const authorInput = document.getElementById('comment-author');
+            const contentInput = document.getElementById('comment-content');
+            const stanceInput = document.querySelector('input[name="comment-stance"]:checked');
+
+            const issue = issues.find(i => i.id === activeIssueId);
+            if (!issue) return;
+
+            const newComment = {
+                id: `c-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                author: authorInput.value.trim(),
+                text: contentInput.value.trim(),
+                stance: stanceInput.value,
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            const updatedComments = [...(issue.comments || []), newComment];
+            const issueDocRef = doc(db, 'issues', activeIssueId);
+
+            try {
+                await updateDoc(issueDocRef, {
+                    comments: updatedComments
+                });
+
+                contentInput.value = '';
+                authorInput.value = '';
+                document.querySelector('input[name="comment-stance"][value="neutral"]').checked = true;
+                showToast("소중한 의견이 동기화되었습니다.", "success");
+            } catch (error) {
+                console.error("Add Comment Error:", error);
+                showToast("네트워크 장애로 의견을 등록할 수 없습니다.", "error");
+            }
+        };
+
+        // Remove Comment
+        window.deleteComment = async function(commentId) {
+            if (!currentUser) return;
+
+            const issue = issues.find(i => i.id === activeIssueId);
+            if (!issue) return;
+
+            const filteredComments = (issue.comments || []).filter(c => c.id !== commentId);
+            const issueDocRef = doc(db, 'issues', activeIssueId);
+
+            try {
+                await updateDoc(issueDocRef, {
+                    comments: filteredComments
+                });
+                showToast("한마디를 삭제 처리하였습니다.", "warning");
+            } catch (error) {
+                console.error("Delete Comment Error:", error);
+                showToast("한마디 삭제에 실패했습니다.", "error");
+            }
+        };
+
+        // Create New Issue Card
+        window.handleCreateIssue = async function(event) {
+            event.preventDefault();
+            if (!currentUser) return;
+
+            const category = document.getElementById('form-category').value;
+            const title = document.getElementById('form-title').value.trim();
+            const description = document.getElementById('form-description').value.trim();
+
+            const newIssue = {
+                category: category,
+                title: title,
+                description: description,
+                agreeCount: 0,
+                disagreeCount: 0,
+                comments: [],
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            try {
+                const issuesCollection = collection(db, 'issues');
+                const docRef = await addDoc(issuesCollection, newIssue);
+                
+                closeCreateModal();
+                showToast("새로운 동네 공론이 제안되었습니다!", "success");
+
+                setTimeout(() => {
+                    openIssueDetail(docRef.id);
+                }, 500);
+
+            } catch (error) {
+                console.error("Add Issue Error:", error);
+                showToast("제안 등록 중 데이터베이스 오류가 발생했습니다.", "error");
+            }
+        };
+
+        // Copy Shareable link to Clipboard
+        window.copyShareLink = function() {
+            if (!activeIssueId) return;
+            const shareUrl = window.location.href;
+            
+            const tempInput = document.createElement('input');
+            tempInput.value = shareUrl;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast("복사 완료! 카카오톡이나 커뮤니티에 이웃을 초대해 보세요.", "success");
+                } else {
+                    showToast("클립보드 접근 권한이 부족합니다.", "warning");
+                }
+            } catch (err) {
+                showToast("링크 복사 과정 중 에러가 발생했습니다.", "error");
+            }
+            document.body.removeChild(tempInput);
+        };
+
+        // Globalized filter callbacks
+        window.filterCategory = function(category) {
+            currentFilter = category;
+            
+            const filterContainer = document.getElementById('category-filters');
+            const buttons = filterContainer.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.className = "px-4 py-2 rounded-xl text-sm font-medium bg-slate-100 text-slate-600 border border-transparent hover:bg-slate-200 transition";
+            });
+
+            const activeBtn = document.getElementById(`btn-cat-${category}`);
+            if (activeBtn) {
+                activeBtn.className = "px-4 py-2 rounded-xl text-sm font-medium bg-blue-50 text-blue-600 border border-blue-100 transition";
+            }
+
+            renderIssues();
+        };
+
+        window.handleSearch = function() {
+            searchQuery = document.getElementById('search-input').value.toLowerCase();
+            renderIssues();
+        };
+
+    </script>
+
+    <!-- General Front-end View UI Script -->
+    <script>
+        function openCreateModal() {
+            document.getElementById('create-modal').classList.remove('hidden');
+        }
+
+        function closeCreateModal() {
+            document.getElementById('create-modal').classList.add('hidden');
+            document.getElementById('form-title').value = '';
+            document.getElementById('form-description').value = '';
+            document.getElementById('form-category').selectedIndex = 0;
+        }
+
+        function showSection(section) {
+            const listSec = document.getElementById('list-section');
+            const detailSec = document.getElementById('detail-section');
+            const heroSec = document.getElementById('hero-section');
+
+            if (section === 'list') {
+                listSec.classList.remove('hidden');
+                detailSec.classList.add('hidden');
+                heroSec.classList.remove('hidden');
+            } else if (section === 'detail') {
+                listSec.classList.add('hidden');
+                detailSec.classList.remove('hidden');
+                heroSec.classList.add('hidden');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast-message');
+            const toastText = document.getElementById('toast-text');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastText.textContent = message;
+            if (type === 'success') {
+                toastIcon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-500"></i>';
+            } else if (type === 'warning') {
+                toastIcon.innerHTML = '<i class="fa-solid fa-circle-exclamation text-amber-500"></i>';
+            } else {
+                toastIcon.innerHTML = '<i class="fa-solid fa-circle-xmark text-rose-500"></i>';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
+
+```
